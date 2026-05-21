@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carousel Tool — r2studio</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Young+Serif&display=swap');
+
+  :root {
+    --accent: #ffc800;
+    --black: #000000;
+    --white: #ffffff;
+    --grey: #888888;
+    --slide-w: 1080px;
+    --slide-h: 1920px;
+    --scale: 0.22;
+    --slide-font: 'Young Serif', Georgia, serif;
+    --heading-font: 'Young Serif', Georgia, serif;
+    --body-font: 'Young Serif', Georgia, serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #111;
+    color: var(--white);
+    font-family: var(--slide-font);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    padding: 28px 40px 20px;
+    border-bottom: 1px solid #222;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 {
+    font-size: 18px;
+    letter-spacing: -1px;
+    color: var(--accent);
+  }
+  header span { font-size: 13px; color: var(--grey); letter-spacing: 0; }
+
+  /* ── LAYOUT ── */
+  .app { display: flex; height: calc(100vh - 73px); }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 320px;
+    min-width: 320px;
+    border-right: 1px solid #222;
+    overflow-y: auto;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .sidebar h2 {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--grey);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .slide-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .slide-item {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    padding: 12px 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: border-color 0.15s;
+  }
+  .slide-item:hover { border-color: #444; }
+  .slide-item.active { border-color: var(--accent); }
+
+  .slide-item-label { font-size: 13px; color: var(--white); letter-spacing: -0.5px; }
+  .slide-item-type { font-size: 11px; color: var(--grey); }
+
+  .slide-controls { display: flex; gap: 6px; }
+  .btn-icon {
+    background: none; border: 1px solid #333; color: var(--grey);
+    border-radius: 4px; width: 28px; height: 28px; cursor: pointer;
+    font-size: 14px; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-icon.danger:hover { border-color: #ff4444; color: #ff4444; }
+
+  /* Add slide buttons */
+  .add-btns { display: flex; flex-direction: column; gap: 6px; }
+  .btn-add {
+    background: #1a1a1a; border: 1px dashed #333; color: var(--grey);
+    border-radius: 6px; padding: 10px 14px; cursor: pointer;
+    font-size: 12px; font-family: inherit; letter-spacing: 0.5px;
+    text-align: left; transition: all 0.15s;
+  }
+  .btn-add:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── EDITOR ── */
+  .editor {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .editor-toolbar {
+    padding: 16px 24px;
+    border-bottom: 1px solid #222;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .editor-toolbar h3 { font-size: 14px; color: var(--white); flex: 1; letter-spacing: -0.5px; }
+
+  .btn-primary {
+    background: var(--accent); color: var(--black);
+    border: none; border-radius: 6px; padding: 9px 18px;
+    font-size: 13px; font-family: inherit; font-weight: 400;
+    cursor: pointer; letter-spacing: -0.3px; transition: opacity 0.15s;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+
+  .btn-secondary {
+    background: #1a1a1a; color: var(--white);
+    border: 1px solid #333; border-radius: 6px; padding: 9px 18px;
+    font-size: 13px; font-family: inherit; cursor: pointer;
+    letter-spacing: -0.3px; transition: all 0.15s;
+  }
+  .btn-secondary:hover { border-color: #555; }
+
+  .editor-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* ── FIELDS PANEL ── */
+  .fields-panel {
+    width: 280px;
+    min-width: 280px;
+    border-right: 1px solid #222;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field-group label { font-size: 11px; color: var(--grey); letter-spacing: 1px; text-transform: uppercase; }
+
+  input[type="text"], textarea {
+    background: #1a1a1a; border: 1px solid #2a2a2a; color: var(--white);
+    border-radius: 5px; padding: 9px 12px; font-size: 13px;
+    font-family: inherit; width: 100%; outline: none;
+    transition: border-color 0.15s; resize: vertical;
+    letter-spacing: -0.3px;
+  }
+  input[type="text"]:focus, textarea:focus { border-color: var(--accent); }
+
+  textarea { min-height: 80px; }
+
+  .bullet-list { display: flex; flex-direction: column; gap: 6px; }
+  .bullet-row { display: flex; gap: 6px; align-items: center; }
+  .bullet-row input { flex: 1; }
+  .btn-remove-bullet {
+    background: none; border: none; color: #555; cursor: pointer;
+    font-size: 18px; padding: 0 4px; transition: color 0.15s; line-height: 1;
+  }
+  .btn-remove-bullet:hover { color: #ff4444; }
+  .btn-add-bullet {
+    background: none; border: 1px dashed #333; color: var(--grey);
+    border-radius: 4px; padding: 6px 10px; font-size: 12px;
+    font-family: inherit; cursor: pointer; text-align: left;
+    transition: all 0.15s;
+  }
+  .btn-add-bullet:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Photo upload */
+  .photo-upload-area {
+    border: 1px dashed #333; border-radius: 6px; padding: 16px;
+    text-align: center; cursor: pointer; transition: all 0.15s;
+    position: relative; overflow: hidden;
+  }
+  .photo-upload-area:hover { border-color: var(--accent); }
+  .photo-upload-area input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    width: 100%; height: 100%;
+  }
+  .photo-upload-area p { font-size: 12px; color: var(--grey); pointer-events: none; }
+  .photo-upload-area.has-photo { border-color: #444; }
+  .photo-preview-thumb {
+    width: 100%; height: 80px; object-fit: cover;
+    border-radius: 4px; margin-bottom: 8px;
+  }
+
+  .dim-control { display: flex; flex-direction: column; gap: 6px; }
+  .dim-control label { font-size: 11px; color: var(--grey); letter-spacing: 1px; text-transform: uppercase; display: flex; justify-content: space-between; }
+  .dim-control label span { color: var(--white); }
+  input[type="range"] {
+    width: 100%; accent-color: var(--accent);
+  }
+
+  /* ── PREVIEW AREA ── */
+  .preview-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto;
+    padding: 32px 24px;
+    gap: 32px;
+    background: #0d0d0d;
+  }
+
+  .preview-label {
+    font-size: 11px; color: var(--grey); letter-spacing: 2px;
+    text-transform: uppercase; align-self: flex-start;
+  }
+
+  /* ── ALL SLIDES PREVIEW ── */
+  .all-slides-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+  }
+
+  .slide-thumb-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+  .slide-thumb-wrapper:hover .slide-canvas-wrap { outline-color: var(--accent); }
+  .slide-thumb-num { font-size: 11px; color: var(--grey); }
+
+  /* ── SLIDE CANVAS ── */
+  .slide-canvas-wrap {
+    width: calc(var(--slide-w) * var(--scale));
+    height: calc(var(--slide-h) * var(--scale));
+    outline: 1px solid #333;
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .slide-canvas {
+    width: var(--slide-w);
+    height: var(--slide-h);
+    transform: scale(var(--scale));
+    transform-origin: top left;
+    position: relative;
+    background: #000;
+    overflow: hidden;
+  }
+
+  /* ── SLIDE INNER DESIGN ── */
+  .slide-bg {
+    position: absolute; inset: 0;
+    background: #000;
+  }
+  .slide-photo {
+    position: absolute; inset: 0;
+    background-size: cover; background-position: center;
+    background-repeat: no-repeat;
+  }
+  .slide-overlay {
+    position: absolute; inset: 0;
+  }
+
+  /*
+   * TikTok Safe Zones (1080×1920):
+   * Top:    150px  — username + following button
+   * Bottom: 350px  — caption, music, progress bar
+   * Right:  120px  — like/comment/share buttons
+   * Left:    60px  — safe margin
+   * Content padding adds extra breathing room inside those zones.
+   */
+  .slide-content {
+    position: absolute;
+    /* top: safe zone 150px + 60px breathing = 210px */
+    /* bottom: safe zone 350px + 40px breathing = 390px */
+    /* right: safe zone 120px + 60px breathing = 180px */
+    /* left: 60px safe + 60px breathing = 120px */
+    top: 210px;
+    bottom: 390px;
+    left: 120px;
+    right: 180px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Handle — inside bottom safe zone, well below content area */
+  .slide-handle {
+    position: absolute;
+    bottom: 120px; left: 120px;
+    font-size: 36px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: -1px;
+    font-family: var(--slide-font);
+  }
+
+  /* Slide number — inside bottom safe zone */
+  .slide-number {
+    position: absolute;
+    bottom: 120px; right: 180px;
+    font-size: 36px;
+    color: rgba(255,255,255,0.3);
+    font-family: var(--slide-font);
+    letter-spacing: -1px;
+  }
+
+  /* Accent bar */
+  .accent-bar {
+    width: 80px; height: 8px;
+    background: var(--accent);
+    margin-bottom: 60px;
+    flex-shrink: 0;
+  }
+
+  /* Typography inside slide */
+  .slide-title {
+    font-family: var(--heading-font);
+    font-size: 95px;
+    color: var(--accent);
+    letter-spacing: -1px;
+    line-height: calc(95px - 8px);
+    margin-bottom: 48px;
+    word-break: break-word;
+  }
+
+  .slide-subtitle {
+    font-family: var(--body-font);
+    font-size: 42px;
+    color: var(--white);
+    letter-spacing: -1px;
+    line-height: 42px;
+    margin-bottom: 0;
+    word-break: break-word;
+  }
+
+  .slide-body-title {
+    font-family: var(--heading-font);
+    font-size: 95px;
+    color: var(--accent);
+    letter-spacing: -1px;
+    line-height: calc(95px - 8px);
+    margin-bottom: 40px;
+    word-break: break-word;
+  }
+
+  .slide-body-desc {
+    font-family: var(--body-font);
+    font-size: 42px;
+    color: var(--white);
+    letter-spacing: -1px;
+    line-height: 42px;
+    word-break: break-word;
+  }
+
+  /* Layout variants — position */
+  .slide-content.layout-top    { justify-content: flex-start; }
+  .slide-content.layout-bottom { justify-content: flex-end; }
+  .slide-content.layout-middle { justify-content: center; }
+  .slide-content.layout-split  { justify-content: space-between; }
+
+  /* Alignment variants */
+  .slide-content.align-left  { align-items: flex-start; text-align: left; }
+  .slide-content.align-right { align-items: flex-end; text-align: right; left: auto; right: 120px; width: 780px; }
+
+  /* Accent bar alignment */
+  .slide-content.align-right .accent-bar { margin-left: auto; margin-right: 0; }
+  .slide-content.align-right .slide-fakt-number { text-align: right; }
+
+  /* Fakt slide */
+  .slide-fakt-label {
+    font-family: var(--body-font);
+    font-size: 36px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+
+  .slide-fakt-number {
+    font-family: var(--heading-font);
+    font-size: 200px;
+    color: var(--accent);
+    letter-spacing: -8px;
+    line-height: 1;
+    margin-bottom: 40px;
+    word-break: break-all;
+  }
+
+  .slide-fakt-context {
+    font-family: var(--body-font);
+    font-size: 42px;
+    color: var(--white);
+    letter-spacing: -1px;
+    line-height: 42px;
+    word-break: break-word;
+  }
+
+  /* End slide */
+  .slide-end-main {
+    font-family: var(--heading-font);
+    font-size: 95px;
+    color: var(--white);
+    letter-spacing: -1px;
+    line-height: calc(95px - 8px);
+    margin-bottom: 48px;
+    word-break: break-word;
+  }
+
+  .slide-end-handle-large {
+    font-family: var(--slide-font);
+    font-size: 52px;
+    color: var(--accent);
+    letter-spacing: -1px;
+  }
+
+  /* Download per slide */
+  .slide-dl-btn {
+    background: #1a1a1a; border: 1px solid #333; color: var(--grey);
+    border-radius: 4px; padding: 6px 14px; font-size: 11px;
+    font-family: inherit; cursor: pointer; transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+  .slide-dl-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── EXPORT ALL BTN ── */
+  .export-all-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 8px 0 24px;
+  }
+
+  /* ── TIKTOK SAFE ZONE OVERLAY ── */
+  .tiktok-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  /* Danger zones — semi-transparent red blocks */
+  .tz-top {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 150px;
+    background: rgba(255,60,60,0.30);
+  }
+  .tz-bottom {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 350px;
+    background: rgba(255,60,60,0.30);
+  }
+  .tz-right {
+    position: absolute;
+    top: 150px; bottom: 350px; right: 0;
+    width: 120px;
+    background: rgba(255,60,60,0.20);
+  }
+
+  /* TikTok UI mockup elements */
+  .tz-username {
+    position: absolute;
+    top: 24px; left: 24px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .tz-avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    border: 2px solid rgba(255,255,255,0.5);
+    flex-shrink: 0;
+  }
+  .tz-name-block { display: flex; flex-direction: column; gap: 4px; }
+  .tz-name {
+    font-size: 28px; font-weight: 700; color: #fff;
+    font-family: -apple-system, sans-serif;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    letter-spacing: 0;
+  }
+  .tz-follow {
+    font-size: 20px; color: rgba(255,255,255,0.7);
+    font-family: -apple-system, sans-serif;
+    letter-spacing: 0;
+  }
+
+  /* Right action buttons */
+  .tz-actions {
+    position: absolute;
+    right: 16px;
+    bottom: 420px;
+    display: flex; flex-direction: column; gap: 32px; align-items: center;
+  }
+  .tz-action-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .tz-action-icon {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+  }
+  .tz-action-count {
+    font-size: 22px; color: #fff;
+    font-family: -apple-system, sans-serif;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    letter-spacing: 0;
+  }
+
+  /* Bottom caption bar */
+  .tz-caption {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 350px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 0 24px 40px;
+    gap: 12px;
+  }
+  .tz-caption-text {
+    font-size: 26px; color: rgba(255,255,255,0.85);
+    font-family: -apple-system, sans-serif;
+    line-height: 1.4;
+    letter-spacing: 0;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+  }
+  .tz-music {
+    font-size: 22px; color: rgba(255,255,255,0.6);
+    font-family: -apple-system, sans-serif;
+    letter-spacing: 0;
+  }
+
+  /* Progress bar */
+  .tz-progress {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 4px;
+    background: rgba(255,255,255,0.2);
+  }
+  .tz-progress-fill {
+    width: 35%; height: 100%;
+    background: #fff;
+  }
+
+  /* Safe zone border outline */
+  .tz-safe-outline {
+    position: absolute;
+    top: 150px; bottom: 350px;
+    left: 60px; right: 120px;
+    border: 2px dashed rgba(255,200,0,0.5);
+    border-radius: 4px;
+    pointer-events: none;
+  }
+
+  /* Safe zone label */
+  .tz-safe-label {
+    position: absolute;
+    top: 160px; left: 70px;
+    font-size: 20px;
+    color: rgba(255,200,0,0.7);
+    font-family: -apple-system, sans-serif;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .draggable-photo {
+    cursor: grab;
+    user-select: none;
+  }
+  .draggable-photo.dragging {
+    cursor: grabbing;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #111; }
+  ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+  /* View toggle */
+  .view-toggle { display: flex; gap: 4px; }
+  .btn-toggle {
+    background: #1a1a1a; border: 1px solid #2a2a2a; color: var(--grey);
+    border-radius: 4px; padding: 6px 12px; font-size: 12px;
+    font-family: inherit; cursor: pointer; transition: all 0.15s;
+  }
+  .btn-toggle.active { border-color: var(--accent); color: var(--accent); }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Carousel Tool</h1>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span id="activeProfileLabel" style="font-size:13px;color:#888;">Kein Profil</span>
+    <button class="btn-secondary" onclick="openProfileModal()" style="font-size:12px;padding:6px 14px;">⚙ Profile</button>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- SIDEBAR: Slide list -->
+  <div class="sidebar">
+    <div>
+      <h2>Slides</h2>
+    </div>
+    <div class="slide-list" id="slideList"></div>
+    <div>
+      <h2 style="margin-bottom:10px">Hinzufügen</h2>
+      <div class="add-btns">
+        <button class="btn-add" onclick="addSlide('start')">+ Start-Slide</button>
+        <button class="btn-add" onclick="addSlide('content')">+ Inhalt-Slide</button>
+        <button class="btn-add" onclick="addSlide('fakt')">+ Fakt-Slide</button>
+        <button class="btn-add" onclick="addSlide('end')">+ End-Slide</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDITOR -->
+  <div class="editor">
+    <div class="editor-toolbar">
+      <h3 id="editorTitle">Slide bearbeiten</h3>
+      <div class="view-toggle">
+        <button class="btn-toggle active" id="btnSingle" onclick="setView('single')">Einzeln</button>
+        <button class="btn-toggle" id="btnAll" onclick="setView('all')">Alle</button>
+      </div>
+      <button class="btn-toggle" id="btnOverlay" onclick="toggleOverlay()" title="TikTok Safe Zones ein/ausblenden" style="gap:6px;display:flex;align-items:center;">
+        <span style="font-size:15px;">📱</span> Safe Zone
+      </button>
+      <button class="btn-secondary" onclick="downloadAllSlides()">Alle herunterladen</button>
+    </div>
+
+    <div class="editor-body">
+
+      <!-- FIELDS PANEL -->
+      <div class="fields-panel" id="fieldsPanel">
+        <p style="font-size:13px;color:#555;margin-top:8px">Slide auswählen um zu bearbeiten.</p>
+      </div>
+
+      <!-- PREVIEW -->
+      <div class="preview-area" id="previewArea">
+        <!-- Single slide preview -->
+        <div id="singleView" style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%">
+          <span class="preview-label">Vorschau</span>
+          <div class="slide-canvas-wrap" id="singleCanvasWrap" style="position:relative;">
+            <div class="slide-canvas" id="singleCanvas"></div>
+            <!-- Intercept layer: catches all mouse events, prevents file input clicks -->
+            <div id="dragInterceptor" style="position:absolute;inset:0;z-index:200;cursor:grab;"></div>
+          </div>
+          <button class="slide-dl-btn" id="singleDlBtn" onclick="downloadCurrentSlide()">PNG herunterladen</button>
+        </div>
+
+        <!-- All slides view -->
+        <div id="allView" class="hidden" style="width:100%">
+          <span class="preview-label" style="display:block;margin-bottom:16px">Alle Slides</span>
+          <div class="all-slides-grid" id="allSlidesGrid"></div>
+          <div class="export-all-wrap">
+            <button class="btn-primary" onclick="downloadAllSlides()">Alle als PNG herunterladen</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- html2canvas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────
+let slides = [];
+let currentSlideId = null;
+let viewMode = 'single';
+let showOverlay = false;
+
+// ─── TIKTOK OVERLAY HTML ─────────────────────────────────────
+function buildOverlayHTML() {
+  return `<div class="tiktok-overlay">
+    <div class="tz-top"></div>
+    <div class="tz-bottom"></div>
+    <div class="tz-right"></div>
+    <div class="tz-safe-outline"></div>
+    <div class="tz-safe-label">Safe Zone</div>
+    <div class="tz-username">
+      <div class="tz-avatar"></div>
+      <div class="tz-name-block">
+        <div class="tz-name">roberttgl</div>
+        <div class="tz-follow">Folgen</div>
+      </div>
+    </div>
+    <div class="tz-actions">
+      <div class="tz-action-btn"><div class="tz-action-icon">♥</div><div class="tz-action-count">1,2K</div></div>
+      <div class="tz-action-btn"><div class="tz-action-icon">💬</div><div class="tz-action-count">48</div></div>
+      <div class="tz-action-btn"><div class="tz-action-icon">↗</div><div class="tz-action-count">Teilen</div></div>
+    </div>
+    <div class="tz-caption">
+      <div class="tz-caption-text">@roberttgl · Caption erscheint hier und kann mehrere Zeilen lang sein...</div>
+      <div class="tz-music">♫ Sound · Originalton</div>
+    </div>
+    <div class="tz-progress"><div class="tz-progress-fill"></div></div>
+  </div>`;
+}
+
+function toggleOverlay() {
+  showOverlay = !showOverlay;
+  const btn = document.getElementById('btnOverlay');
+  btn.classList.toggle('active', showOverlay);
+  renderPreview();
+}
+
+// ─── SLIDE FACTORY ───────────────────────────────────────────
+function createSlide(type) {
+  const id = Date.now() + Math.random();
+  const base = { id, type, photo: null, photoUrl: null, dim: 0.55, photoX: 50, photoY: 50, layout: 'top' };
+  if (type === 'start') return { ...base, title: 'Dein Titel', subtitle: 'Untertitel hier' };
+  if (type === 'content') return { ...base, title: 'Punkt', desc: 'Kurze Erklärung.' };
+  if (type === 'fakt') return { ...base, faktLabel: 'FAKT', faktNum: '73%', faktContext: 'Was diese Zahl bedeutet.' };
+  if (type === 'end') return { ...base, endText: 'Mehr davon täglich auf' };
+  return base;
+}
+
+function addSlide(type) {
+  const s = createSlide(type);
+  slides.push(s);
+  currentSlideId = s.id;
+  renderAll();
+}
+
+function deleteSlide(id) {
+  slides = slides.filter(s => s.id !== id);
+  if (currentSlideId === id) currentSlideId = slides.length ? slides[slides.length-1].id : null;
+  renderAll();
+}
+
+function moveSlide(id, dir) {
+  const i = slides.findIndex(s => s.id === id);
+  const j = i + dir;
+  if (j < 0 || j >= slides.length) return;
+  [slides[i], slides[j]] = [slides[j], slides[i]];
+  renderAll();
+}
+
+function selectSlide(id) {
+  currentSlideId = id;
+  renderAll();
+}
+
+// ─── VIEW ────────────────────────────────────────────────────
+function setView(mode) {
+  viewMode = mode;
+  document.getElementById('btnSingle').classList.toggle('active', mode === 'single');
+  document.getElementById('btnAll').classList.toggle('active', mode === 'all');
+  document.getElementById('singleView').classList.toggle('hidden', mode !== 'single');
+  document.getElementById('allView').classList.toggle('hidden', mode !== 'all');
+  if (mode === 'all') renderAllGrid();
+}
+
+// ─── RENDER SIDEBAR ──────────────────────────────────────────
+const typeLabel = { start: 'Start', content: 'Inhalt', fakt: 'Fakt', end: 'End' };
+
+function renderSidebar() {
+  const list = document.getElementById('slideList');
+  list.innerHTML = '';
+  slides.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'slide-item' + (s.id === currentSlideId ? ' active' : '');
+    div.innerHTML = `
+      <div onclick="selectSlide(${s.id})" style="flex:1;min-width:0;cursor:pointer">
+        <div class="slide-item-label">${i+1}. ${typeLabel[s.type] || s.type}</div>
+        <div class="slide-item-type">${getSlidePreviewText(s)}</div>
+      </div>
+      <div class="slide-controls">
+        <button class="btn-icon" onclick="moveSlide(${s.id},-1)" title="Hoch">↑</button>
+        <button class="btn-icon" onclick="moveSlide(${s.id},1)" title="Runter">↓</button>
+        <button class="btn-icon danger" onclick="deleteSlide(${s.id})" title="Löschen">×</button>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+function getSlidePreviewText(s) {
+  if (s.type === 'start') return s.title || '';
+  if (s.type === 'content') return s.title || '';
+  if (s.type === 'fakt') return s.faktNum || '';
+  if (s.type === 'end') return 'End-Slide';
+  return '';
+}
+
+// ─── RENDER FIELDS ───────────────────────────────────────────
+function renderFields() {
+  const panel = document.getElementById('fieldsPanel');
+  const s = slides.find(x => x.id === currentSlideId);
+  if (!s) { panel.innerHTML = '<p style="font-size:13px;color:#555;margin-top:8px">Slide auswählen.</p>'; return; }
+
+  document.getElementById('editorTitle').textContent = `${typeLabel[s.type]}-Slide bearbeiten`;
+
+  let html = '';
+
+  // Photo upload (all slides)
+  html += `<div class="field-group">
+    <label>Hintergrundfoto</label>
+    ${s.photoUrl ? `<img class="photo-preview-thumb" src="${s.photoUrl}" alt="" style="width:100%;height:80px;object-fit:cover;border-radius:4px;margin-bottom:6px;">` : ''}
+    <button class="btn-secondary" style="width:100%;font-size:12px;padding:8px;" onclick="document.getElementById('photoInput_${s.id}').click()">
+      ${s.photoUrl ? 'Foto ersetzen' : 'Foto hochladen'}
+    </button>
+    <input type="file" accept="image/*" id="photoInput_${s.id}" onchange="handlePhoto(event,${s.id})" style="display:none">
+    ${s.photoUrl ? `<p style="font-size:11px;color:#555;margin-top:4px;">Bild in Vorschau ziehen zum Positionieren</p>` : ''}
+  </div>`;
+
+  if (s.photoUrl) {
+    html += `<div class="field-group dim-control">
+      <label>Abdunklung <span>${Math.round(s.dim*100)}%</span></label>
+      <input type="range" min="0" max="1" step="0.05" value="${s.dim}" oninput="updateDim(${s.id},this.value,this.parentElement.querySelector('span'))">
+    </div>`;
+  }
+
+  // Layout picker (all slides except end)
+  if (s.type !== 'end') {
+    const layouts = [
+      { val: 'top',    label: 'Oben' },
+      { val: 'middle', label: 'Mitte' },
+      { val: 'bottom', label: 'Unten' },
+      { val: 'split',  label: 'Split' },
+    ];
+    const btns = layouts.map(l =>
+      `<button class="btn-toggle ${(s.layout||'top') === l.val ? 'active' : ''}"
+        style="flex:1;padding:6px 4px;font-size:11px;"
+        onclick="updateLayout(${s.id},'${l.val}')">${l.label}</button>`
+    ).join('');
+    html += field('Position', `<div style="display:flex;gap:4px;">${btns}</div>`);
+
+    const aligns = [
+      { val: 'left',  label: '← Links' },
+      { val: 'right', label: 'Rechts →' },
+    ];
+    const alignBtns = aligns.map(a =>
+      `<button class="btn-toggle ${(s.align||'left') === a.val ? 'active' : ''}"
+        style="flex:1;padding:6px 4px;font-size:11px;"
+        onclick="updateAlign(${s.id},'${a.val}')">${a.label}</button>`
+    ).join('');
+    html += field('Ausrichtung', `<div style="display:flex;gap:4px;">${alignBtns}</div>`);
+  }
+
+  if (s.type === 'start') {
+    html += field('Titel', `<input type="text" value="${esc(s.title)}" oninput="updateField(${s.id},'title',this.value)">`);
+    html += field('Untertitel', `<textarea oninput="updateField(${s.id},'subtitle',this.value)">${esc(s.subtitle)}</textarea>`);
+  }
+
+  if (s.type === 'content') {
+    html += field('Titel', `<input type="text" value="${esc(s.title)}" oninput="updateField(${s.id},'title',this.value)">`);
+    html += field('Beschreibung', `<textarea oninput="updateField(${s.id},'desc',this.value)">${esc(s.desc)}</textarea>`);
+  }
+
+  if (s.type === 'fakt') {
+    html += field('Label', `<input type="text" value="${esc(s.faktLabel)}" oninput="updateField(${s.id},'faktLabel',this.value)">`);
+    html += field('Zahl / Wert', `<input type="text" value="${esc(s.faktNum)}" oninput="updateField(${s.id},'faktNum',this.value)">`);
+    html += field('Kontext', `<textarea oninput="updateField(${s.id},'faktContext',this.value)">${esc(s.faktContext)}</textarea>`);
+  }
+
+  if (s.type === 'end') {
+    html += field('Text', `<textarea oninput="updateField(${s.id},'endText',this.value)">${esc(s.endText)}</textarea>`);
+  }
+
+  panel.innerHTML = html;
+}
+
+function field(label, control) {
+  return `<div class="field-group"><label>${label}</label>${control}</div>`;
+}
+
+function esc(str) { return (str||'').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ─── FIELD UPDATES ───────────────────────────────────────────
+function updateField(id, key, val) {
+  const s = slides.find(x => x.id === id);
+  if (!s) return;
+  s[key] = val;
+  renderPreview();
+  renderSidebar();
+  if (viewMode === 'all') renderAllGrid();
+}
+
+function updateDim(id, val, spanEl) {
+  const s = slides.find(x => x.id === id);
+  if (!s) return;
+  s.dim = parseFloat(val);
+  if (spanEl) spanEl.textContent = Math.round(s.dim*100) + '%';
+  renderPreview();
+  if (viewMode === 'all') renderAllGrid();
+}
+
+function updateLayout(id, val) {
+  const s = slides.find(x => x.id === id);
+  if (!s) return;
+  s.layout = val;
+  renderFields();
+  renderPreview();
+  if (viewMode === 'all') renderAllGrid();
+}
+
+function updateAlign(id, val) {
+  const s = slides.find(x => x.id === id);
+  if (!s) return;
+  s.align = val;
+  renderFields();
+  renderPreview();
+  if (viewMode === 'all') renderAllGrid();
+}
+
+function handlePhoto(event, id) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const s = slides.find(x => x.id === id);
+    if (!s) return;
+    s.photoUrl = e.target.result;
+    renderFields();
+    renderPreview();
+    if (viewMode === 'all') renderAllGrid();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── SLIDE HTML BUILDER ──────────────────────────────────────
+function buildSlideHTML(s, index, total) {
+  const px = s.photoX !== undefined ? s.photoX : 50;
+  const py = s.photoY !== undefined ? s.photoY : 50;
+  const bgStyle = s.photoUrl
+    ? `background-image:url('${s.photoUrl}');background-size:cover;background-position:${px}% ${py}%;`
+    : 'background:#000;';
+  const overlayStyle = s.photoUrl
+    ? `background:rgba(0,0,0,${s.dim});`
+    : 'background:#000;';
+
+  const showNum = total > 1;
+  const numHTML = showNum ? `<div class="slide-number">${index+1}/${total}</div>` : '';
+
+  let inner = '';
+
+  if (s.type === 'start') {
+    inner = `
+      <div class="accent-bar"></div>
+      <div class="slide-title">${nl(s.title)}</div>
+      <div class="slide-subtitle">${nl(s.subtitle)}</div>`;
+  }
+
+  if (s.type === 'content') {
+    inner = `
+      <div class="accent-bar"></div>
+      <div class="slide-body-title">${nl(s.title)}</div>
+      ${s.desc ? `<div class="slide-body-desc">${nl(s.desc)}</div>` : ''}`;
+  }
+
+  // Layout class — end slide always bottom
+  const layout = s.type === 'end' ? 'bottom' : (s.layout || 'top');
+  const align = s.type === 'end' ? 'left' : (s.align || 'left');
+  const layoutClass = `layout-${layout} align-${align}`;
+
+  // Split: accent-bar top, desc bottom — restructure inner for split
+  let splitInner = inner;
+  if (layout === 'split' && s.type === 'content') {
+    splitInner = `
+      <div>
+        <div class="accent-bar"></div>
+        <div class="slide-body-title">${nl(s.title)}</div>
+      </div>
+      <div class="slide-body-desc">${nl(s.desc||'')}</div>`;
+  }
+  if (layout === 'split' && s.type === 'start') {
+    splitInner = `
+      <div>
+        <div class="accent-bar"></div>
+        <div class="slide-title">${nl(s.title)}</div>
+      </div>
+      <div class="slide-subtitle">${nl(s.subtitle||'')}</div>`;
+  }
+  if (layout === 'split' && s.type === 'fakt') {
+    splitInner = `
+      <div>
+        <div class="accent-bar"></div>
+        <div class="slide-fakt-label">${nl(s.faktLabel)}</div>
+        <div class="slide-fakt-number">${nl(s.faktNum)}</div>
+      </div>
+      <div class="slide-fakt-context">${nl(s.faktContext||'')}</div>`;
+  }
+
+  const finalInner = layout === 'split' ? splitInner : inner;
+
+  if (s.type === 'fakt') {
+    inner = `
+      <div class="accent-bar"></div>
+      <div class="slide-fakt-label">${nl(s.faktLabel)}</div>
+      <div class="slide-fakt-number">${nl(s.faktNum)}</div>
+      <div class="slide-fakt-context">${nl(s.faktContext)}</div>`;
+  }
+
+  const handle = (activeProfile && activeProfile.handle) ? activeProfile.handle : '@roberttgl';
+
+  if (s.type === 'end') {
+    inner = `
+      <div class="accent-bar" style="margin-top:auto;margin-bottom:60px"></div>
+      <div class="slide-end-main">${nl(s.endText)}</div>
+      <div class="slide-end-handle-large">${handle}</div>`;
+  }
+
+  const useFinal = (layout === 'split' && s.type !== 'fakt' && s.type !== 'end') ? splitInner : inner;
+
+  return `
+    <div class="slide-bg">
+      <div class="slide-photo ${s.photoUrl ? 'draggable-photo' : ''}" data-slideid="${s.id}" style="${bgStyle}"></div>
+      <div class="slide-overlay" style="${overlayStyle}"></div>
+    </div>
+    <div class="slide-content ${layoutClass}">${useFinal}</div>
+    ${numHTML}`;
+}
+
+function nl(str) {
+  return (str||'').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+// ─── RENDER PREVIEW ──────────────────────────────────────────
+function renderPreview() {
+  const s = slides.find(x => x.id === currentSlideId);
+  const canvas = document.getElementById('singleCanvas');
+  if (!s) { canvas.innerHTML = ''; return; }
+  canvas.innerHTML = buildSlideHTML(s, slides.indexOf(s), slides.length)
+    + (showOverlay ? buildOverlayHTML() : '');
+}
+
+function renderAllGrid() {
+  const grid = document.getElementById('allSlidesGrid');
+  grid.innerHTML = '';
+  slides.forEach((s, i) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'slide-thumb-wrapper';
+    wrapper.innerHTML = `
+      <div class="slide-canvas-wrap" onclick="selectSlideAndEdit(${s.id})">
+        <div class="slide-canvas">${buildSlideHTML(s, i, slides.length)}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="slide-thumb-num">${i+1} · ${typeLabel[s.type]}</span>
+        <button class="slide-dl-btn" onclick="downloadSlideById(${s.id},${i})">PNG</button>
+      </div>`;
+    grid.appendChild(wrapper);
+  });
+}
+
+function selectSlideAndEdit(id) {
+  currentSlideId = id;
+  setView('single');
+  renderAll();
+}
+
+// ─── FULL RENDER ─────────────────────────────────────────────
+function renderAll() {
+  renderSidebar();
+  renderFields();
+  renderPreview();
+  if (viewMode === 'all') renderAllGrid();
+}
+
+// ─── DOWNLOAD ────────────────────────────────────────────────
+async function captureSlide(s, index) {
+  // Build off-screen slide at full resolution
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:1080px;height:1920px;overflow:hidden;background:#000;`;
+  wrap.innerHTML = `<div class="slide-canvas" style="width:1080px;height:1920px;transform:none;">${buildSlideHTML(s, index, slides.length)}</div>`;
+  document.body.appendChild(wrap);
+
+  // Wait for images
+  await new Promise(r => setTimeout(r, 200));
+
+  const canvas = await html2canvas(wrap.firstChild, {
+    width: 1080, height: 1920,
+    scale: 1,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#000',
+    logging: false,
+  });
+
+  document.body.removeChild(wrap);
+  return canvas;
+}
+
+async function downloadCurrentSlide() {
+  const s = slides.find(x => x.id === currentSlideId);
+  if (!s) return;
+  const btn = document.getElementById('singleDlBtn');
+  btn.textContent = 'Wird exportiert...';
+  btn.disabled = true;
+  try {
+    const idx = slides.indexOf(s);
+    const canvas = await captureSlide(s, idx);
+    triggerDownload(canvas, `roberttgl_slide_${idx+1}_${s.type}`);
+  } catch(e) { console.error(e); }
+  btn.textContent = 'PNG herunterladen';
+  btn.disabled = false;
+}
+
+async function downloadSlideById(id, index) {
+  const s = slides.find(x => x.id === id);
+  if (!s) return;
+  const canvas = await captureSlide(s, index);
+  triggerDownload(canvas, `roberttgl_slide_${index+1}_${s.type}`);
+}
+
+async function downloadAllSlides() {
+  if (!slides.length) return;
+  for (let i = 0; i < slides.length; i++) {
+    const canvas = await captureSlide(slides[i], i);
+    triggerDownload(canvas, `roberttgl_slide_${i+1}_${slides[i].type}`);
+    await new Promise(r => setTimeout(r, 300));
+  }
+}
+
+function triggerDownload(canvas, name) {
+  const link = document.createElement('a');
+  link.download = `${name}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+// ─── DRAG TO REPOSITION PHOTO ────────────────────────────────
+let dragState = null;
+
+document.addEventListener('mousedown', e => {
+  const interceptor = document.getElementById('dragInterceptor');
+  if (!interceptor || e.target !== interceptor) return;
+
+  const s = slides.find(x => x.id === currentSlideId);
+  if (!s || !s.photoUrl) return;
+
+  e.preventDefault();
+
+  const wrap = document.getElementById('singleCanvasWrap');
+  const wrapRect = wrap.getBoundingClientRect();
+
+  dragState = {
+    s,
+    startX: e.clientX,
+    startY: e.clientY,
+    startPX: s.photoX !== undefined ? s.photoX : 50,
+    startPY: s.photoY !== undefined ? s.photoY : 50,
+    wrapW: wrapRect.width,
+    wrapH: wrapRect.height,
+  };
+
+  interceptor.style.cursor = 'grabbing';
+});
+
+document.addEventListener('mousemove', e => {
+  if (!dragState) return;
+  const { s, startX, startY, startPX, startPY, wrapW, wrapH } = dragState;
+
+  const dx = -(e.clientX - startX) / wrapW * 100;
+  const dy = -(e.clientY - startY) / wrapH * 100;
+
+  s.photoX = Math.min(100, Math.max(0, startPX + dx));
+  s.photoY = Math.min(100, Math.max(0, startPY + dy));
+
+  // Live update only the photo element for smoothness
+  const photoEl = document.getElementById('singleCanvas').querySelector('.draggable-photo');
+  if (photoEl) {
+    photoEl.style.backgroundPosition = `${s.photoX}% ${s.photoY}%`;
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  if (!dragState) return;
+  dragState = null;
+  const interceptor = document.getElementById('dragInterceptor');
+  if (interceptor) interceptor.style.cursor = 'grab';
+  if (viewMode === 'all') renderAllGrid();
+});
+
+// ─── INIT ────────────────────────────────────────────────────
+// Start with a default set
+addSlide('start');
+addSlide('content');
+addSlide('end');
+currentSlideId = slides[0].id;
+renderAll();
+</script>
+<!-- PROFILE MODAL -->
+<div id="profileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;width:480px;max-height:80vh;overflow-y:auto;padding:32px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+      <h2 style="font-size:16px;letter-spacing:-0.5px;">Profile</h2>
+      <button onclick="closeProfileModal()" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer;">×</button>
+    </div>
+
+    <!-- Profile list -->
+    <div id="profileList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;"></div>
+
+    <!-- New profile form -->
+    <div style="border-top:1px solid #222;padding-top:20px;">
+      <h3 style="font-size:12px;color:#888;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;">Neues Profil</h3>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="field-group"><label>Name</label><input type="text" id="newProfileName" placeholder="z.B. r2studio"></div>
+        <div class="field-group"><label>Handle</label><input type="text" id="newProfileHandle" placeholder="@r2studio"></div>
+        <div class="field-group"><label>Akzentfarbe</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="color" id="newProfileColor" value="#ffc800" style="width:48px;height:36px;border:none;background:none;cursor:pointer;padding:0;">
+            <input type="text" id="newProfileColorHex" value="#ffc800" style="flex:1;" oninput="syncColorFromHex()">
+          </div>
+        </div>
+
+        <!-- Heading Font -->
+        <div style="background:#111;border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px;">
+          <label style="font-size:11px;color:#888;letter-spacing:1px;text-transform:uppercase;">Überschrift Font</label>
+          <div style="display:flex;gap:6px;">
+            <button class="btn-secondary" style="flex:1;font-size:11px;padding:7px;" onclick="document.getElementById('headingFontFile').click()">Font hochladen</button>
+            <input type="file" id="headingFontFile" accept=".ttf,.woff,.woff2,.otf" style="display:none" onchange="uploadFont(event,'heading')">
+          </div>
+          <input type="text" id="newProfileHeadingFontUrl" placeholder="oder Google Font URL" style="font-size:12px;">
+          <input type="text" id="newProfileHeadingFontFamily" placeholder="Font Family Name (z.B. Young Serif)" style="font-size:12px;">
+          <p id="headingFontStatus" style="font-size:11px;color:#555;"></p>
+        </div>
+
+        <!-- Body Font -->
+        <div style="background:#111;border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px;">
+          <label style="font-size:11px;color:#888;letter-spacing:1px;text-transform:uppercase;">Body Font</label>
+          <div style="display:flex;gap:6px;">
+            <button class="btn-secondary" style="flex:1;font-size:11px;padding:7px;" onclick="document.getElementById('bodyFontFile').click()">Font hochladen</button>
+            <input type="file" id="bodyFontFile" accept=".ttf,.woff,.woff2,.otf" style="display:none" onchange="uploadFont(event,'body')">
+          </div>
+          <input type="text" id="newProfileBodyFontUrl" placeholder="oder Google Font URL" style="font-size:12px;">
+          <input type="text" id="newProfileBodyFontFamily" placeholder="Font Family Name (z.B. Inter)" style="font-size:12px;">
+          <p id="bodyFontStatus" style="font-size:11px;color:#555;"></p>
+        </div>
+
+        <button class="btn-primary" onclick="createProfile()" style="margin-top:4px;">Profil anlegen</button>
+      </div>
+    </div>
+
+    <!-- Supabase config -->
+    <div style="border-top:1px solid #222;padding-top:20px;margin-top:20px;">
+      <h3 style="font-size:12px;color:#888;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;">Supabase Verbindung</h3>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="field-group"><label>Supabase URL</label><input type="text" id="cfgUrl" placeholder="https://xxx.supabase.co"></div>
+        <div class="field-group"><label>Anon Key</label><input type="text" id="cfgKey" placeholder="eyJ..."></div>
+        <button class="btn-secondary" onclick="saveConfig()" style="width:100%;">Verbindung speichern & laden</button>
+      </div>
+      <p id="cfgStatus" style="font-size:11px;color:#555;margin-top:8px;"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── SUPABASE CONFIG ─────────────────────────────────────────
+let SUPABASE_URL = localStorage.getItem('carousel_supabase_url') || '';
+let SUPABASE_KEY = localStorage.getItem('carousel_supabase_key') || '';
+let activeProfile = null;
+
+async function supabase(method, path, body) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return null;
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    method,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'return=representation' : '',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) return null;
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+// ─── PROFILE MODAL ───────────────────────────────────────────
+function openProfileModal() {
+  document.getElementById('profileModal').style.display = 'flex';
+  // Pre-fill config fields
+  document.getElementById('cfgUrl').value = SUPABASE_URL;
+  document.getElementById('cfgKey').value = SUPABASE_KEY;
+  loadProfiles();
+}
+
+function closeProfileModal() {
+  document.getElementById('profileModal').style.display = 'none';
+}
+
+async function saveConfig() {
+  SUPABASE_URL = document.getElementById('cfgUrl').value.trim().replace(/\/$/, '');
+  SUPABASE_KEY = document.getElementById('cfgKey').value.trim();
+  localStorage.setItem('carousel_supabase_url', SUPABASE_URL);
+  localStorage.setItem('carousel_supabase_key', SUPABASE_KEY);
+  document.getElementById('cfgStatus').textContent = 'Verbinde...';
+  await loadProfiles();
+}
+
+async function loadProfiles() {
+  const data = await supabase('GET', 'carousel_profiles?order=created_at.asc');
+  if (!data) {
+    document.getElementById('cfgStatus').textContent = 'Verbindung fehlgeschlagen. URL und Key prüfen.';
+    document.getElementById('profileList').innerHTML = '<p style="font-size:12px;color:#555;">Keine Verbindung.</p>';
+    return;
+  }
+  document.getElementById('cfgStatus').textContent = `Verbunden — ${data.length} Profile gefunden.`;
+  renderProfileList(data);
+}
+
+function renderProfileList(profiles) {
+  const list = document.getElementById('profileList');
+  if (!profiles.length) { list.innerHTML = '<p style="font-size:12px;color:#555;">Noch keine Profile.</p>'; return; }
+  list.innerHTML = profiles.map(p => `
+    <div style="background:#111;border:1px solid ${activeProfile && activeProfile.id === p.id ? '#ffc800' : '#2a2a2a'};border-radius:6px;padding:12px 14px;display:flex;align-items:center;gap:12px;">
+      <div style="width:20px;height:20px;border-radius:50%;background:${p.accent_color};flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;letter-spacing:-0.5px;">${p.name}</div>
+        <div style="font-size:11px;color:#666;">${p.handle} · ${p.heading_font_family || p.font_family || 'Young Serif'}</div>
+      </div>
+      <button class="btn-toggle ${activeProfile && activeProfile.id === p.id ? 'active' : ''}" onclick="activateProfile(${JSON.stringify(p).replace(/"/g,'&quot;')})" style="font-size:11px;padding:5px 10px;">Aktivieren</button>
+      ${!p.is_default ? `<button class="btn-icon danger" onclick="deleteProfile(${p.id})" title="Löschen">×</button>` : ''}
+    </div>`).join('');
+}
+
+function activateProfile(p) {
+  activeProfile = p;
+  applyProfile(p);
+  closeProfileModal();
+}
+
+function applyProfile(p) {
+  document.documentElement.style.setProperty('--accent', p.accent_color);
+
+  // Remove old font links
+  document.querySelectorAll('.profileFontLink').forEach(l => l.remove());
+
+  // Load heading font
+  const headingFontUrl = p.heading_font_url || p.font_url || '';
+  const headingFontFamily = p.heading_font_family || p.font_family || 'Young Serif';
+  if (headingFontUrl) {
+    if (headingFontUrl.startsWith('http')) {
+      const link = document.createElement('link');
+      link.className = 'profileFontLink';
+      link.rel = 'stylesheet';
+      link.href = headingFontUrl;
+      document.head.appendChild(link);
+    } else {
+      // Direct font file URL — load via @font-face
+      const style = document.createElement('style');
+      style.className = 'profileFontLink';
+      style.textContent = `@font-face { font-family: '${headingFontFamily}'; src: url('${headingFontUrl}'); }`;
+      document.head.appendChild(style);
+    }
+  }
+
+  // Load body font
+  const bodyFontUrl = p.body_font_url || headingFontUrl;
+  const bodyFontFamily = p.body_font_family || headingFontFamily;
+  if (bodyFontUrl && bodyFontUrl !== headingFontUrl) {
+    if (bodyFontUrl.startsWith('http')) {
+      const link = document.createElement('link');
+      link.className = 'profileFontLink';
+      link.rel = 'stylesheet';
+      link.href = bodyFontUrl;
+      document.head.appendChild(link);
+    } else {
+      const style = document.createElement('style');
+      style.className = 'profileFontLink';
+      style.textContent = `@font-face { font-family: '${bodyFontFamily}'; src: url('${bodyFontUrl}'); }`;
+      document.head.appendChild(style);
+    }
+  }
+
+  document.documentElement.style.setProperty('--heading-font', `'${headingFontFamily}', Georgia, serif`);
+  document.documentElement.style.setProperty('--body-font', `'${bodyFontFamily}', Georgia, serif`);
+  document.documentElement.style.setProperty('--slide-font', `'${headingFontFamily}', Georgia, serif`);
+
+  document.getElementById('activeProfileLabel').textContent = `${p.name} · ${p.handle}`;
+  renderAll();
+}
+
+// ─── FONT UPLOAD ─────────────────────────────────────────────
+async function uploadFont(event, slot) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!SUPABASE_URL || !SUPABASE_KEY) { alert('Zuerst Supabase Verbindung einrichten.'); return; }
+
+  const statusEl = document.getElementById(`${slot}FontStatus`);
+  statusEl.textContent = 'Wird hochgeladen...';
+  statusEl.style.color = '#888';
+
+  const fileName = `${Date.now()}_${file.name.replace(/\s/g, '_')}`;
+
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/fonts/${fileName}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': file.type || 'font/ttf',
+    },
+    body: file,
+  });
+
+  if (!res.ok) {
+    statusEl.textContent = 'Upload fehlgeschlagen. Bucket "fonts" prüfen.';
+    statusEl.style.color = '#ff4444';
+    return;
+  }
+
+  const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/fonts/${fileName}`;
+  const familyName = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+
+  if (slot === 'heading') {
+    document.getElementById('newProfileHeadingFontUrl').value = publicUrl;
+    document.getElementById('newProfileHeadingFontFamily').value = familyName;
+  } else {
+    document.getElementById('newProfileBodyFontUrl').value = publicUrl;
+    document.getElementById('newProfileBodyFontFamily').value = familyName;
+  }
+
+  statusEl.textContent = 'Hochgeladen.';
+  statusEl.style.color = '#ffc800';
+}
+
+async function createProfile() {
+  const name = document.getElementById('newProfileName').value.trim();
+  const handle = document.getElementById('newProfileHandle').value.trim();
+  const accent_color = document.getElementById('newProfileColorHex').value.trim();
+  const heading_font_url = document.getElementById('newProfileHeadingFontUrl').value.trim();
+  const heading_font_family = document.getElementById('newProfileHeadingFontFamily').value.trim();
+  const body_font_url = document.getElementById('newProfileBodyFontUrl').value.trim();
+  const body_font_family = document.getElementById('newProfileBodyFontFamily').value.trim();
+
+  if (!name || !handle) { alert('Name und Handle sind Pflichtfelder.'); return; }
+
+  const result = await supabase('POST', 'carousel_profiles', {
+    name, handle,
+    accent_color: accent_color || '#ffc800',
+    heading_font_url: heading_font_url || 'https://fonts.googleapis.com/css2?family=Young+Serif&display=swap',
+    heading_font_family: heading_font_family || 'Young Serif',
+    body_font_url: body_font_url || heading_font_url || 'https://fonts.googleapis.com/css2?family=Young+Serif&display=swap',
+    body_font_family: body_font_family || heading_font_family || 'Young Serif',
+    is_default: false,
+  });
+
+  if (!result) { alert('Fehler beim Anlegen. Supabase Verbindung prüfen.'); return; }
+
+  // Clear form
+  ['newProfileName','newProfileHandle','newProfileHeadingFontUrl','newProfileHeadingFontFamily',
+   'newProfileBodyFontUrl','newProfileBodyFontFamily'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('headingFontStatus').textContent = '';
+  document.getElementById('bodyFontStatus').textContent = '';
+  await loadProfiles();
+}
+
+async function deleteProfile(id) {
+  if (!confirm('Profil löschen?')) return;
+  await supabase('DELETE', `carousel_profiles?id=eq.${id}`);
+  await loadProfiles();
+}
+
+function syncColorFromHex() {
+  const hex = document.getElementById('newProfileColorHex').value;
+  if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
+    document.getElementById('newProfileColor').value = hex;
+  }
+}
+
+document.getElementById('newProfileColor').addEventListener('input', function() {
+  document.getElementById('newProfileColorHex').value = this.value;
+});
+
+// Close modal on backdrop click
+document.getElementById('profileModal').addEventListener('click', function(e) {
+  if (e.target === this) closeProfileModal();
+});
+
+// ─── OVERRIDE SLIDE FONT WITH ACTIVE PROFILE ─────────────────
+const origBuildSlideHTML = buildSlideHTML;
+// Patch font into slide canvas via CSS var
+document.documentElement.style.setProperty('--slide-font', "'Young Serif', Georgia, serif");
+
+// Auto-load if config exists
+if (SUPABASE_URL && SUPABASE_KEY) {
+  supabase('GET', 'carousel_profiles?is_default=eq.true&limit=1').then(data => {
+    if (data && data.length) activateProfile(data[0]);
+  });
+}
+</script>
+</body>
+</html>
