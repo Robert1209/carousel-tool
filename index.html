@@ -1200,12 +1200,12 @@ document.addEventListener('mouseup', () => {
 });
 
 // ─── INIT ────────────────────────────────────────────────────
-// Start with a default set
 addSlide('start');
 addSlide('content');
 addSlide('end');
 currentSlideId = slides[0].id;
 renderAll();
+renderPreview();
 </script>
 <!-- PROFILE MODAL -->
 <div id="profileModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:center;justify-content:center;">
