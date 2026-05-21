@@ -1296,22 +1296,15 @@ function closeProfileModal() {
 }
 
 async function saveConfig() {
-  SUPABASE_URL = document.getElementById('cfgUrl').value.trim().replace(/\/$/, '');
-  SUPABASE_KEY = document.getElementById('cfgKey').value.trim();
-  localStorage.setItem('carousel_supabase_url', SUPABASE_URL);
-  localStorage.setItem('carousel_supabase_key', SUPABASE_KEY);
-  document.getElementById('cfgStatus').textContent = 'Verbinde...';
   await loadProfiles();
 }
 
 async function loadProfiles() {
   const data = await supabase('GET', 'carousel_profiles?order=created_at.asc');
   if (!data) {
-    document.getElementById('cfgStatus').textContent = 'Verbindung fehlgeschlagen. URL und Key prüfen.';
-    document.getElementById('profileList').innerHTML = '<p style="font-size:12px;color:#555;">Keine Verbindung.</p>';
+    document.getElementById('profileList').innerHTML = '<p style="font-size:12px;color:#ff4444;">Verbindung fehlgeschlagen.</p>';
     return;
   }
-  document.getElementById('cfgStatus').textContent = `Verbunden — ${data.length} Profile gefunden.`;
   renderProfileList(data);
 }
 
