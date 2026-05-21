@@ -19,6 +19,10 @@
     --slide-font: 'Young Serif', Georgia, serif;
     --heading-font: 'Young Serif', Georgia, serif;
     --body-font: 'Young Serif', Georgia, serif;
+    --heading-letter-spacing: -1px;
+    --heading-line-height: 87px;
+    --body-letter-spacing: -1px;
+    --body-line-height: 42px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -340,8 +344,8 @@
     font-family: var(--heading-font);
     font-size: 95px;
     color: var(--accent);
-    letter-spacing: -1px;
-    line-height: calc(95px - 8px);
+    letter-spacing: var(--heading-letter-spacing);
+    line-height: var(--heading-line-height);
     margin-bottom: 48px;
     word-break: break-word;
   }
@@ -350,8 +354,8 @@
     font-family: var(--body-font);
     font-size: 42px;
     color: var(--white);
-    letter-spacing: -1px;
-    line-height: 42px;
+    letter-spacing: var(--body-letter-spacing);
+    line-height: var(--body-line-height);
     margin-bottom: 0;
     word-break: break-word;
   }
@@ -360,8 +364,8 @@
     font-family: var(--heading-font);
     font-size: 95px;
     color: var(--accent);
-    letter-spacing: -1px;
-    line-height: calc(95px - 8px);
+    letter-spacing: var(--heading-letter-spacing);
+    line-height: var(--heading-line-height);
     margin-bottom: 40px;
     word-break: break-word;
   }
@@ -370,8 +374,8 @@
     font-family: var(--body-font);
     font-size: 42px;
     color: var(--white);
-    letter-spacing: -1px;
-    line-height: 42px;
+    letter-spacing: var(--body-letter-spacing);
+    line-height: var(--body-line-height);
     word-break: break-word;
   }
 
@@ -413,8 +417,8 @@
     font-family: var(--body-font);
     font-size: 42px;
     color: var(--white);
-    letter-spacing: -1px;
-    line-height: 42px;
+    letter-spacing: var(--body-letter-spacing);
+    line-height: var(--body-line-height);
     word-break: break-word;
   }
 
@@ -423,8 +427,8 @@
     font-family: var(--heading-font);
     font-size: 95px;
     color: var(--white);
-    letter-spacing: -1px;
-    line-height: calc(95px - 8px);
+    letter-spacing: var(--heading-letter-spacing);
+    line-height: var(--heading-line-height);
     margin-bottom: 48px;
     word-break: break-word;
   }
@@ -1553,6 +1557,31 @@ setTimeout(() => renderAll(), 50);
           <p id="bodyFontStatus" style="font-size:11px;color:#555;"></p>
         </div>
 
+        <!-- Typography -->
+        <div style="background:#111;border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:10px;">
+          <label style="font-size:11px;color:#888;letter-spacing:1px;text-transform:uppercase;">Überschrift Typografie</label>
+          <div class="field-group dim-control">
+            <label>Zeichenabstand <span id="hls-val">-1px</span></label>
+            <input type="range" min="-5" max="5" step="0.5" value="-1" id="newProfileHLS" oninput="document.getElementById('hls-val').textContent=this.value+'px'">
+          </div>
+          <div class="field-group dim-control">
+            <label>Zeilenabstand <span id="hlh-val">87px</span></label>
+            <input type="range" min="60" max="160" step="1" value="87" id="newProfileHLH" oninput="document.getElementById('hlh-val').textContent=this.value+'px'">
+          </div>
+        </div>
+
+        <div style="background:#111;border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:10px;">
+          <label style="font-size:11px;color:#888;letter-spacing:1px;text-transform:uppercase;">Body Typografie</label>
+          <div class="field-group dim-control">
+            <label>Zeichenabstand <span id="bls-val">-1px</span></label>
+            <input type="range" min="-5" max="5" step="0.5" value="-1" id="newProfileBLS" oninput="document.getElementById('bls-val').textContent=this.value+'px'">
+          </div>
+          <div class="field-group dim-control">
+            <label>Zeilenabstand <span id="blh-val">42px</span></label>
+            <input type="range" min="30" max="80" step="1" value="42" id="newProfileBLH" oninput="document.getElementById('blh-val').textContent=this.value+'px'">
+          </div>
+        </div>
+
         <button class="btn-primary" onclick="createProfile()" style="margin-top:4px;">Profil anlegen</button>
       </div>
     </div>
@@ -1673,6 +1702,16 @@ function applyProfile(p) {
   document.documentElement.style.setProperty('--body-font', `'${bodyFontFamily}', Georgia, serif`);
   document.documentElement.style.setProperty('--slide-font', `'${headingFontFamily}', Georgia, serif`);
 
+  // Typography
+  const hls = p.heading_letter_spacing !== undefined ? p.heading_letter_spacing : -1;
+  const hlh = p.heading_line_height !== undefined ? p.heading_line_height : 87;
+  const bls = p.body_letter_spacing !== undefined ? p.body_letter_spacing : -1;
+  const blh = p.body_line_height !== undefined ? p.body_line_height : 42;
+  document.documentElement.style.setProperty('--heading-letter-spacing', `${hls}px`);
+  document.documentElement.style.setProperty('--heading-line-height', `${hlh}px`);
+  document.documentElement.style.setProperty('--body-letter-spacing', `${bls}px`);
+  document.documentElement.style.setProperty('--body-line-height', `${blh}px`);
+
   document.getElementById('activeProfileLabel').textContent = `${p.name} · ${p.handle}`;
   renderAll();
 }
@@ -1729,6 +1768,11 @@ async function createProfile() {
   const body_font_url = document.getElementById('newProfileBodyFontUrl').value.trim();
   const body_font_family = document.getElementById('newProfileBodyFontFamily').value.trim();
 
+  const heading_letter_spacing = parseFloat(document.getElementById('newProfileHLS').value);
+  const heading_line_height = parseFloat(document.getElementById('newProfileHLH').value);
+  const body_letter_spacing = parseFloat(document.getElementById('newProfileBLS').value);
+  const body_line_height = parseFloat(document.getElementById('newProfileBLH').value);
+
   if (!name || !handle) { alert('Name und Handle sind Pflichtfelder.'); return; }
 
   const result = await supabase('POST', 'carousel_profiles', {
@@ -1738,6 +1782,8 @@ async function createProfile() {
     heading_font_family: heading_font_family || 'Young Serif',
     body_font_url: body_font_url || heading_font_url || 'https://fonts.googleapis.com/css2?family=Young+Serif&display=swap',
     body_font_family: body_font_family || heading_font_family || 'Young Serif',
+    heading_letter_spacing, heading_line_height,
+    body_letter_spacing, body_line_height,
     is_default: false,
   });
 
