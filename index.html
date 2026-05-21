@@ -1260,23 +1260,13 @@ setTimeout(() => renderAll(), 50);
       </div>
     </div>
 
-    <!-- Supabase config -->
-    <div style="border-top:1px solid #222;padding-top:20px;margin-top:20px;">
-      <h3 style="font-size:12px;color:#888;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;">Supabase Verbindung</h3>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div class="field-group"><label>Supabase URL</label><input type="text" id="cfgUrl" placeholder="https://xxx.supabase.co"></div>
-        <div class="field-group"><label>Anon Key</label><input type="text" id="cfgKey" placeholder="eyJ..."></div>
-        <button class="btn-secondary" onclick="saveConfig()" style="width:100%;">Verbindung speichern & laden</button>
-      </div>
-      <p id="cfgStatus" style="font-size:11px;color:#555;margin-top:8px;"></p>
-    </div>
   </div>
 </div>
 
 <script>
 // ─── SUPABASE CONFIG ─────────────────────────────────────────
-let SUPABASE_URL = localStorage.getItem('carousel_supabase_url') || '';
-let SUPABASE_KEY = localStorage.getItem('carousel_supabase_key') || '';
+let SUPABASE_URL = 'https://tssrvyjossogsgtnggzq.supabase.co';
+let SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzc3J2eWpvc3NvZ3NndG5nZ3pxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzODA3MjEsImV4cCI6MjA5NDk1NjcyMX0.DezEZUUge3YAAifl3pnaXjVtvFejr6tgmQnXxe7cjPk';
 
 async function supabase(method, path, body) {
   if (!SUPABASE_URL || !SUPABASE_KEY) return null;
@@ -1298,9 +1288,6 @@ async function supabase(method, path, body) {
 // ─── PROFILE MODAL ───────────────────────────────────────────
 function openProfileModal() {
   document.getElementById('profileModal').style.display = 'flex';
-  // Pre-fill config fields
-  document.getElementById('cfgUrl').value = SUPABASE_URL;
-  document.getElementById('cfgKey').value = SUPABASE_KEY;
   loadProfiles();
 }
 
