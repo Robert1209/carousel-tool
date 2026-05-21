@@ -15,6 +15,7 @@
     --slide-w: 1080px;
     --slide-h: 1920px;
     --scale: 0.22;
+    --scale-feed: 0.28;
     --slide-font: 'Young Serif', Georgia, serif;
     --heading-font: 'Young Serif', Georgia, serif;
     --body-font: 'Young Serif', Georgia, serif;
@@ -647,7 +648,12 @@
         <button class="btn-toggle active" id="btnSingle" onclick="setView('single')">Einzeln</button>
         <button class="btn-toggle" id="btnAll" onclick="setView('all')">Alle</button>
       </div>
-      <button class="btn-toggle" id="btnOverlay" onclick="toggleOverlay()" title="TikTok Safe Zones ein/ausblenden" style="gap:6px;display:flex;align-items:center;">
+      <div class="view-toggle" style="border:1px solid #2a2a2a;border-radius:6px;padding:2px;">
+        <button class="btn-toggle active" id="fmtTikTok" onclick="setFormat('tiktok')" title="TikTok">TikTok</button>
+        <button class="btn-toggle" id="fmtReels" onclick="setFormat('reels')" title="Instagram Reels">Reels</button>
+        <button class="btn-toggle" id="fmtFeed" onclick="setFormat('feed')" title="Instagram Feed">Feed</button>
+      </div>
+      <button class="btn-toggle" id="btnOverlay" onclick="toggleOverlay()" style="gap:6px;display:flex;align-items:center;">
         <span style="font-size:15px;">📱</span> Safe Zone
       </button>
       <button class="btn-secondary" onclick="downloadAllSlides()">Alle herunterladen</button>
@@ -697,29 +703,70 @@ let currentSlideId = null;
 let viewMode = 'single';
 let showOverlay = false;
 let activeProfile = null;
+let currentFormat = 'tiktok'; // tiktok | reels | feed
 
-// ─── TIKTOK OVERLAY HTML ─────────────────────────────────────
+// Format configs
+const FORMATS = {
+  tiktok: { w: 1080, h: 1920, label: 'TikTok',           scale: 0.22,
+    safe: { top: 150, bottom: 350, right: 120, left: 60 } },
+  reels:  { w: 1080, h: 1920, label: 'Instagram Reels',  scale: 0.22,
+    safe: { top: 100, bottom: 280, right: 80,  left: 60 } },
+  feed:   { w: 1080, h: 1350, label: 'Instagram Feed',   scale: 0.28,
+    safe: { top: 60,  bottom: 60,  right: 60,  left: 60 } },
+};
+
+function setFormat(fmt) {
+  currentFormat = fmt;
+  ['tiktok','reels','feed'].forEach(f => {
+    document.getElementById(`fmt${f.charAt(0).toUpperCase()+f.slice(1)}`).classList.toggle('active', f === fmt);
+  });
+  // Update canvas wrap dimensions
+  const f = FORMATS[fmt];
+  const wrap = document.getElementById('singleCanvasWrap');
+  wrap.style.width  = `${f.w * f.scale}px`;
+  wrap.style.height = `${f.h * f.scale}px`;
+  renderAll();
+}
+
+// ─── TIKTOK/INSTA OVERLAY HTML ───────────────────────────────
 function buildOverlayHTML() {
+  const fmt = FORMATS[currentFormat];
+  const safe = fmt.safe;
+
+  if (currentFormat === 'feed') {
+    return `<div class="tiktok-overlay">
+      <div class="tz-safe-outline" style="top:${safe.top}px;bottom:${safe.bottom}px;left:${safe.left}px;right:${safe.right}px;"></div>
+      <div class="tz-safe-label" style="top:${safe.top+10}px;left:${safe.left+10}px;">Safe Zone</div>
+      <div style="position:absolute;top:0;left:0;right:0;height:${safe.top}px;background:rgba(255,60,60,0.25);"></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;height:${safe.bottom}px;background:rgba(255,60,60,0.25);"></div>
+    </div>`;
+  }
+
+  // TikTok or Reels
+  const icon = currentFormat === 'tiktok' ? '♥' : '♥';
+  const platformLabel = currentFormat === 'tiktok' ? 'TikTok' : 'Instagram';
+  const handle = (activeProfile && activeProfile.handle) ? activeProfile.handle.replace('@','') : 'roberttgl';
+
   return `<div class="tiktok-overlay">
-    <div class="tz-top"></div>
-    <div class="tz-bottom"></div>
-    <div class="tz-right"></div>
-    <div class="tz-safe-outline"></div>
-    <div class="tz-safe-label">Safe Zone</div>
+    <div style="position:absolute;top:0;left:0;right:0;height:${safe.top}px;background:rgba(255,60,60,0.28);"></div>
+    <div style="position:absolute;bottom:0;left:0;right:0;height:${safe.bottom}px;background:rgba(255,60,60,0.28);"></div>
+    <div style="position:absolute;top:${safe.top}px;bottom:${safe.bottom}px;right:0;width:${safe.right}px;background:rgba(255,60,60,0.18);"></div>
+    <div class="tz-safe-outline" style="top:${safe.top}px;bottom:${safe.bottom}px;left:${safe.left}px;right:${safe.right}px;"></div>
+    <div class="tz-safe-label" style="top:${safe.top+10}px;left:${safe.left+10}px;">Safe Zone</div>
     <div class="tz-username">
       <div class="tz-avatar"></div>
       <div class="tz-name-block">
-        <div class="tz-name">roberttgl</div>
+        <div class="tz-name">${handle}</div>
         <div class="tz-follow">Folgen</div>
       </div>
     </div>
-    <div class="tz-actions">
+    <div class="tz-actions" style="right:16px;bottom:${safe.bottom+70}px;">
       <div class="tz-action-btn"><div class="tz-action-icon">♥</div><div class="tz-action-count">1,2K</div></div>
       <div class="tz-action-btn"><div class="tz-action-icon">💬</div><div class="tz-action-count">48</div></div>
       <div class="tz-action-btn"><div class="tz-action-icon">↗</div><div class="tz-action-count">Teilen</div></div>
     </div>
-    <div class="tz-caption">
-      <div class="tz-caption-text">@roberttgl · Caption erscheint hier und kann mehrere Zeilen lang sein...</div>
+    <div class="tz-caption" style="height:${safe.bottom}px;">
+      <div class="tz-caption-text">@${handle} · Caption...</div>
       <div class="tz-music">♫ Sound · Originalton</div>
     </div>
     <div class="tz-progress"><div class="tz-progress-fill"></div></div>
@@ -949,6 +996,13 @@ function handlePhoto(event, id) {
 
 // ─── SLIDE HTML BUILDER ──────────────────────────────────────
 function buildSlideHTML(s, index, total) {
+  const fmt = FORMATS[currentFormat];
+  const safe = fmt.safe;
+  const contentTop    = safe.top + 60;
+  const contentBottom = safe.bottom + 40;
+  const contentLeft   = safe.left + 60;
+  const contentRight  = safe.right + 60;
+
   const px = s.photoX !== undefined ? s.photoX : 50;
   const py = s.photoY !== undefined ? s.photoY : 50;
   const bgStyle = s.photoUrl
@@ -1036,8 +1090,8 @@ function buildSlideHTML(s, index, total) {
       <div class="slide-photo ${s.photoUrl ? 'draggable-photo' : ''}" data-slideid="${s.id}" style="${bgStyle}"></div>
       <div class="slide-overlay" style="${overlayStyle}"></div>
     </div>
-    <div class="slide-content ${layoutClass}">${useFinal}</div>
-    ${numHTML}`;
+    <div class="slide-content ${layoutClass}" style="top:${contentTop}px;bottom:${contentBottom}px;left:${contentLeft}px;right:${contentRight}px;">${useFinal}</div>
+    ${showNum ? `<div class="slide-number" style="bottom:${Math.round(safe.bottom/2)}px;right:${contentRight}px;">${index+1}/${total}</div>` : ''}`;
 }
 
 function nl(str) {
@@ -1048,6 +1102,16 @@ function nl(str) {
 function renderPreview() {
   const s = slides.find(x => x.id === currentSlideId);
   const canvas = document.getElementById('singleCanvas');
+  const fmt = FORMATS[currentFormat];
+
+  // Update canvas and wrap dimensions for current format
+  canvas.style.width  = `${fmt.w}px`;
+  canvas.style.height = `${fmt.h}px`;
+  const wrap = document.getElementById('singleCanvasWrap');
+  wrap.style.width  = `${Math.round(fmt.w * fmt.scale)}px`;
+  wrap.style.height = `${Math.round(fmt.h * fmt.scale)}px`;
+  canvas.style.transform = `scale(${fmt.scale})`;
+
   if (!s) { canvas.innerHTML = ''; return; }
   canvas.innerHTML = buildSlideHTML(s, slides.indexOf(s), slides.length)
     + (showOverlay ? buildOverlayHTML() : '');
@@ -1055,15 +1119,18 @@ function renderPreview() {
 
 function renderAllGrid() {
   const grid = document.getElementById('allSlidesGrid');
+  const fmt = FORMATS[currentFormat];
   grid.innerHTML = '';
   slides.forEach((s, i) => {
+    const w = Math.round(fmt.w * fmt.scale);
+    const h = Math.round(fmt.h * fmt.scale);
     const wrapper = document.createElement('div');
     wrapper.className = 'slide-thumb-wrapper';
     wrapper.innerHTML = `
-      <div class="slide-canvas-wrap" onclick="selectSlideAndEdit(${s.id})">
-        <div class="slide-canvas">${buildSlideHTML(s, i, slides.length)}</div>
+      <div class="slide-canvas-wrap" style="width:${w}px;height:${h}px;" onclick="selectSlideAndEdit(${s.id})">
+        <div class="slide-canvas" style="width:${fmt.w}px;height:${fmt.h}px;transform:scale(${fmt.scale});">${buildSlideHTML(s, i, slides.length)}</div>
       </div>
-      <div style="display:flex;gap:8px;align-items:center">
+      <div style="display:flex;gap:8px;align-items:center;">
         <span class="slide-thumb-num">${i+1} · ${typeLabel[s.type]}</span>
         <button class="slide-dl-btn" onclick="downloadSlideById(${s.id},${i})">PNG</button>
       </div>`;
@@ -1087,24 +1154,17 @@ function renderAll() {
 
 // ─── DOWNLOAD ────────────────────────────────────────────────
 async function captureSlide(s, index) {
-  // Build off-screen slide at full resolution
+  const fmt = FORMATS[currentFormat];
   const wrap = document.createElement('div');
-  wrap.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:1080px;height:1920px;overflow:hidden;background:#000;`;
-  wrap.innerHTML = `<div class="slide-canvas" style="width:1080px;height:1920px;transform:none;">${buildSlideHTML(s, index, slides.length)}</div>`;
+  wrap.style.cssText = `position:fixed;top:-9999px;left:-9999px;width:${fmt.w}px;height:${fmt.h}px;overflow:hidden;background:#000;`;
+  wrap.innerHTML = `<div class="slide-canvas" style="width:${fmt.w}px;height:${fmt.h}px;transform:none;">${buildSlideHTML(s, index, slides.length)}</div>`;
   document.body.appendChild(wrap);
-
-  // Wait for images
   await new Promise(r => setTimeout(r, 200));
-
   const canvas = await html2canvas(wrap.firstChild, {
-    width: 1080, height: 1920,
-    scale: 1,
-    useCORS: true,
-    allowTaint: true,
-    backgroundColor: '#000',
-    logging: false,
+    width: fmt.w, height: fmt.h,
+    scale: 1, useCORS: true, allowTaint: true,
+    backgroundColor: '#000', logging: false,
   });
-
   document.body.removeChild(wrap);
   return canvas;
 }
