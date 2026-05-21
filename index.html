@@ -649,9 +649,9 @@
         <button class="btn-toggle" id="btnAll" onclick="setView('all')">Alle</button>
       </div>
       <div class="view-toggle" style="border:1px solid #2a2a2a;border-radius:6px;padding:2px;">
-        <button class="btn-toggle active" id="fmtTikTok" onclick="setFormat('tiktok')" title="TikTok">TikTok</button>
-        <button class="btn-toggle" id="fmtReels" onclick="setFormat('reels')" title="Instagram Reels">Reels</button>
-        <button class="btn-toggle" id="fmtFeed" onclick="setFormat('feed')" title="Instagram Feed">Feed</button>
+        <button class="btn-toggle active" id="fmt-tiktok" onclick="setFormat('tiktok')">TikTok</button>
+        <button class="btn-toggle" id="fmt-story" onclick="setFormat('story')">IG Story</button>
+        <button class="btn-toggle" id="fmt-feed" onclick="setFormat('feed')">IG Feed</button>
       </div>
       <button class="btn-toggle" id="btnOverlay" onclick="toggleOverlay()" style="gap:6px;display:flex;align-items:center;">
         <span style="font-size:15px;">📱</span> Safe Zone
@@ -707,24 +707,17 @@ let currentFormat = 'tiktok'; // tiktok | reels | feed
 
 // Format configs
 const FORMATS = {
-  tiktok: { w: 1080, h: 1920, label: 'TikTok',           scale: 0.22,
-    safe: { top: 150, bottom: 350, right: 120, left: 60 } },
-  reels:  { w: 1080, h: 1920, label: 'Instagram Reels',  scale: 0.22,
-    safe: { top: 100, bottom: 280, right: 80,  left: 60 } },
-  feed:   { w: 1080, h: 1350, label: 'Instagram Feed',   scale: 0.28,
-    safe: { top: 60,  bottom: 60,  right: 60,  left: 60 } },
+  tiktok: { w: 1080, h: 1920, label: 'TikTok',    scale: 0.22, safe: { top: 150, bottom: 350, right: 120, left: 60 } },
+  story:  { w: 1080, h: 1920, label: 'IG Story',   scale: 0.22, safe: { top: 100, bottom: 280, right: 80,  left: 60 } },
+  feed:   { w: 1080, h: 1350, label: 'IG Feed',    scale: 0.28, safe: { top: 60,  bottom: 60,  right: 60,  left: 60 } },
 };
 
 function setFormat(fmt) {
   currentFormat = fmt;
-  ['tiktok','reels','feed'].forEach(f => {
-    document.getElementById(`fmt${f.charAt(0).toUpperCase()+f.slice(1)}`).classList.toggle('active', f === fmt);
+  ['tiktok','story','feed'].forEach(f => {
+    const btn = document.getElementById(`fmt-${f}`);
+    if (btn) btn.classList.toggle('active', f === fmt);
   });
-  // Update canvas wrap dimensions
-  const f = FORMATS[fmt];
-  const wrap = document.getElementById('singleCanvasWrap');
-  wrap.style.width  = `${f.w * f.scale}px`;
-  wrap.style.height = `${f.h * f.scale}px`;
   renderAll();
 }
 
