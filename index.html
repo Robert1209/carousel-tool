@@ -614,7 +614,7 @@
     .mobile-panel {
       flex: 1;
       overflow-y: auto;
-      padding: 16px;
+      padding: 16px 16px 80px;
       display: none;
     }
     .mobile-panel.active { display: block; }
@@ -624,8 +624,11 @@
       display: flex;
       border-top: 1px solid #222;
       background: #111;
-      position: sticky;
+      position: fixed;
       bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 500;
     }
     .mobile-tab {
       flex: 1;
