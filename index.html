@@ -1503,11 +1503,13 @@ const origBuildSlideHTML = buildSlideHTML;
 // Patch font into slide canvas via CSS var
 document.documentElement.style.setProperty('--slide-font', "'Young Serif', Georgia, serif");
 
-// Auto-load if config exists
+// Auto-load wenn config existiert
 if (SUPABASE_URL && SUPABASE_KEY) {
-  supabase('GET', 'carousel_profiles?is_default=eq.true&limit=1').then(data => {
-    if (data && data.length) activateProfile(data[0]);
-  });
+  setTimeout(() => {
+    supabase('GET', 'carousel_profiles?is_default=eq.true&limit=1').then(data => {
+      if (data && data.length) activateProfile(data[0]);
+    });
+  }, 200);
 }
 </script>
 </body>
