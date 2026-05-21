@@ -1084,7 +1084,7 @@ function buildSlideHTML(s, index, total) {
       <div class="slide-overlay" style="${overlayStyle}"></div>
     </div>
     <div class="slide-content ${layoutClass}" style="top:${contentTop}px;bottom:${contentBottom}px;left:${contentLeft}px;right:${contentRight}px;">${useFinal}</div>
-    ${showNum ? `<div class="slide-number" style="bottom:${Math.round(safe.bottom/2)}px;right:${contentRight}px;">${index+1}/${total}</div>` : ''}`;
+    ${showNum ? `<div class="slide-number" style="bottom:${safe.bottom + 20}px;right:${contentRight}px;">${index+1}/${total}</div>` : ''}`;
 }
 
 function nl(str) {
