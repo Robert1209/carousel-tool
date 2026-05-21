@@ -1290,14 +1290,7 @@ function isMobile() { return window.innerWidth <= 768; }
 
 function setMobileTab(tab) {
   ['slides','edit','preview'].forEach(t => {
-    document.getElementById(`mobileSlides`.replace('Slides', t.charAt(0).toUpperCase()+t.slice(1)) || `mobile${t.charAt(0).toUpperCase()+t.slice(1)}`).classList.toggle('active', t === tab);
-    document.getElementById(`mtab-${t}`).classList.toggle('active', t === tab);
-  });
-  // Proper panel IDs
-  document.getElementById('mobileSlides').classList.toggle('active', tab === 'slides');
-  document.getElementById('mobileEdit').classList.toggle('active', tab === 'edit');
-  document.getElementById('mobilePreview').classList.toggle('active', tab === 'preview');
-  ['slides','edit','preview'].forEach(t => {
+    document.getElementById(`mobile${t.charAt(0).toUpperCase()+t.slice(1)}`).classList.toggle('active', t === tab);
     document.getElementById(`mtab-${t}`).classList.toggle('active', t === tab);
   });
   if (tab === 'preview') renderMobilePreview();
